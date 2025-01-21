@@ -42,6 +42,9 @@ void KeyboardReader::run()
             frame.addHeader("accept-version", "1.2");
             frame.addHeader("channel_name", channel_name);
 
+            std::string receiptId = connectionHandler_.generateReceiptId();
+            frame.addHeader("receipt", receiptId);
+
             std::string frameStr = frame.toString();
             if (!connectionHandler_.sendLine(frameStr))
             {
@@ -49,6 +52,8 @@ void KeyboardReader::run()
                           << std::endl;
                 break;
             }
+
+            addFrame(receiptId, frame);
         }
         else if (line.substr(0, 4) == "exit")
         {
@@ -60,6 +65,9 @@ void KeyboardReader::run()
             frame.addHeader("accept-version", "1.2");
             frame.addHeader("channel_name", channel_name);
 
+            std::string receiptId = connectionHandler_.generateReceiptId();
+            frame.addHeader("receipt", receiptId);
+
             std::string frameStr = frame.toString();
             if (!connectionHandler_.sendLine(frameStr))
             {
@@ -67,6 +75,8 @@ void KeyboardReader::run()
                           << std::endl;
                 break;
             }
+
+            addFrame(receiptId, frame);
         }
         else if (line.substr(0, 6) == "report")
         {
@@ -78,6 +88,9 @@ void KeyboardReader::run()
             frame.addHeader("accept-version", "1.2");
             frame.addHeader("file", file);
 
+            std::string receiptId = connectionHandler_.generateReceiptId();
+            frame.addHeader("receipt", receiptId);
+
             std::string frameStr = frame.toString();
             if (!connectionHandler_.sendLine(frameStr))
             {
@@ -85,6 +98,8 @@ void KeyboardReader::run()
                           << std::endl;
                 break;
             }
+
+            addFrame(receiptId, frame);
         }
         else if (line.substr(0, 7) == "summary")
         {
@@ -98,6 +113,9 @@ void KeyboardReader::run()
             frame.addHeader("user", user);
             frame.addHeader("file", file);
 
+            std::string receiptId = connectionHandler_.generateReceiptId();
+            frame.addHeader("receipt", receiptId);
+
             std::string frameStr = frame.toString();
             if (!connectionHandler_.sendLine(frameStr))
             {
@@ -105,6 +123,8 @@ void KeyboardReader::run()
                           << std::endl;
                 break;
             }
+
+            addFrame(receiptId, frame);
         }
         else if (line.substr(0, 6) == "logout")
         {
@@ -116,6 +136,9 @@ void KeyboardReader::run()
             frame.addHeader("accept-version", "1.2");
             frame.addHeader("reciept", reciept);
 
+            std::string receiptId = connectionHandler_.generateReceiptId();
+            frame.addHeader("receipt", receiptId);
+
             std::string frameStr = frame.toString();
             if (!connectionHandler_.sendLine(frameStr))
             {
@@ -123,6 +146,13 @@ void KeyboardReader::run()
                           << std::endl;
                 break;
             }
+
+            addFrame(receiptId, frame);
         }
     }
+}
+
+void KeyboardReader::addFrame(const std::string &receiptId, const StompFrame &frame)
+{
+    sentFrames_[receiptId] = frame;
 }

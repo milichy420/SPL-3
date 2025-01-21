@@ -11,6 +11,10 @@ public:
     void addHeader(const std::string &key, const std::string &value);
     void setBody(const std::string &body);
     std::string toString() const;
+    static StompFrame fromString(const std::string &frameStr);
+    std::string getCommand() const { return command_; }
+    std::string getBody() const { return body_; }
+    std::string getHeader(const std::string &key) const { return headers_.at(key); }
 
 private:
     std::string command_;

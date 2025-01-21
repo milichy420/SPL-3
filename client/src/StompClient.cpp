@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 	}
 
 	KeyboardReader keyboardReader(connectionHandler);
-	SocketReader socketReader(connectionHandler);
+	SocketReader socketReader(connectionHandler, keyboardReader);
 
 	std::thread keyboardThread(&KeyboardReader::run, &keyboardReader);
 	std::thread socketThread(&SocketReader::run, &socketReader);
