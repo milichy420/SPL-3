@@ -31,7 +31,7 @@ LDFLAGS:=-lboost_system -lpthread
 
 all: StompClient
 
-StompClient: bin/ConnectionHandler.o bin/KeyboardReader.o bin/SocketReader.o bin/StompClient.o
+StompEMIClient: bin/ConnectionHandler.o bin/KeyboardReader.o bin/SocketReader.o bin/StompClient.o
     g++ -o bin/StompClient bin/ConnectionHandler.o bin/KeyboardReader.o bin/SocketReader.o bin/StompClient.o $(LDFLAGS)
 
 bin/ConnectionHandler.o: src/ConnectionHandler.cpp

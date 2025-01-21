@@ -21,11 +21,36 @@ void SocketReader::run()
         if (frame.getCommand() == "CONNECTED")
         {
             std::cout << "Login successful." << std::endl;
+            keyboardReader_.setLoggedIn(true);
         }
         else if (frame.getCommand() == "RECEIPT")
         {
             std::string receiptId = frame.getHeader("receipt-id");
-            std::cout << "receipt-id: " << receiptId << std::endl;
+            std::cout << "Receipt received for frame: " << receiptId << std::endl;
+            StompFrame sentFrame = keyboardReader_.getFrame(receiptId);
+            std::cout << "Associated frame: " << sentFrame.toString() << std::endl;
+
+            if (sentFrame.getCommand() == "DISCONNECT")
+            {
+                std::cout << "Disconnecting..." << std::endl;
+                keyboardReader_.setLoggedIn(false);
+                connectionHandler_.close();
+                break;
+            }
+            else if (sentFrame.getCommand() == "SUBSCRIBE")
+            {
+                std::cout << "Joind channel " << sentFrame.getHeader("destination") << std::endl;
+                break;
+            }
+            else if (sentFrame.getCommand() == "UNSUBSCRIBE")
+            {
+                std::cout << "Exited channel " << sentFrame.getHeader("destination") << std::endl;
+                break;
+            }
+            else if (sentFrame.getCommand() == "SEND")
+            {
+                /* code */
+            }
         }
         else if (frame.getCommand() == "MESSAGE")
         {
