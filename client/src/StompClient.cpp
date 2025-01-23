@@ -6,8 +6,8 @@
 
 int main(int argc, char *argv[])
 {
-	const std::string HOST = "stomp.cs.bgu.ac.il";
-	const short PORT = 7777;
+	// const std::string HOST = "stomp.cs.bgu.ac.il";
+	// const short PORT = 7777;
 
 	if (argc < 3)
 	{

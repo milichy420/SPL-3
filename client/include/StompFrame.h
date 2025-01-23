@@ -7,6 +7,7 @@
 class StompFrame
 {
 public:
+    StompFrame();
     StompFrame(const std::string &command);
     void addHeader(const std::string &key, const std::string &value);
     void setBody(const std::string &body);

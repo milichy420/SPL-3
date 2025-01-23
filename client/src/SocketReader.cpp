@@ -54,7 +54,13 @@ void SocketReader::run()
         }
         else if (frame.getCommand() == "MESSAGE")
         {
-            std::cout << "Received message: " << frame.getBody() << std::endl;
+            std::string destination = frame.getHeader("destination");
+            std::string message = frame.getBody();
+            std::cout << "Received message: /n" << std::endl;
+            std::cout << "Destination: " << destination << "/n" << std::endl;
+            std::cout << "Received message: " << message << std::endl;
+
+            keyboardReader_.addMessageToChannel(destination, message);
         }
         else if (frame.getCommand() == "ERROR")
         {

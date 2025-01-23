@@ -1,7 +1,9 @@
 #include "../include/StompFrame.h"
 #include <sstream>
 
-StompFrame::StompFrame(const std::string &command) : command_(command) {}
+StompFrame::StompFrame() : command_(""), headers_(), body_("") {}
+
+StompFrame::StompFrame(const std::string &command) : command_(command), headers_(), body_("") {}
 
 void StompFrame::addHeader(const std::string &key, const std::string &value)
 {
