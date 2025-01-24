@@ -145,12 +145,12 @@ std::string Event::toString() const
     eventString += "city: " + get_city() + "\n";
     eventString += "event name: " + get_name() + "\n";
     eventString += "date time: " + std::to_string(date_time) + "\n";
-    eventString += "General Information: \n";
+    eventString += "general information:\n";
     for (auto &info : general_information)
     {
-        eventString += info.first + ": " + info.second + "\n";
+        eventString += "    " + info.first + ": " + info.second + "\n";
     }
-    eventString += "Description: " + description + "\n";
+    eventString += "description:\n" + description + "\n";
     return eventString;
 }
 
@@ -158,7 +158,6 @@ names_and_events parseEventsFile(std::string json_path)
 {
     std::ifstream f(json_path);
     json data = json::parse(f);
-
     std::string channel_name = data["channel_name"];
 
     // run over all the events and convert them to Event objects

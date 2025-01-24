@@ -8,9 +8,9 @@
 #include <fstream>
 #include <thread>
 
-// KeyboardReader::KeyboardReader(ConnectionHandler &connectionHandler) : connectionHandler_(connectionHandler), sentFrames_(), channelMessages_(), loggedIn_(false), user_("") {}
-// KeyboardReader::KeyboardReader(ConnectionHandler connectionHandler) : connectionHandler_(connectionHandler), sentFrames_(), channelMessages_(), loggedIn_(false), user_("") {}
-KeyboardReader::KeyboardReader() : connectionHandler_("127.0.0.1", 7777), sentFrames_(), channelMessages_(), loggedIn_(false), user_(""), socketThread_(), stopThread_(false) {}
+KeyboardReader::KeyboardReader() : connectionHandler_("127.0.0.1", 7777), sentFrames_(), channelMessages_(),
+                                   topicToSubscriptionId_(), subscriptionIdCounter_(0), loggedIn_(false), user_(""),
+                                   socketThread_(), stopThread_(false) {}
 
 KeyboardReader::~KeyboardReader()
 {
@@ -30,7 +30,6 @@ void KeyboardReader::run()
             stopSocketThread();
         }
 
-        // Example: handle "login <host:port> <username> <password>" command
         if (line.substr(0, 5) == "login")
         {
             std::istringstream iss(line);
@@ -40,7 +39,6 @@ void KeyboardReader::run()
             std::string host = hostPort.substr(0, hostPort.find(':'));
             short port = std::stoi(hostPort.substr(hostPort.find(':') + 1));
 
-            // ConnectionHandler connectionHandler_(host, port);
             connectionHandler_.setHost(host);
             connectionHandler_.setPort(port);
             if (!connectionHandler_.connect())
@@ -58,7 +56,6 @@ void KeyboardReader::run()
             user_ = username;
 
             std::string frameStr = frame.toString();
-            std::cout << "Sending frame: " << frameStr << std::endl;
 
             if (!connectionHandler_.sendFrameAscii(frameStr, '\0'))
             {
@@ -85,10 +82,13 @@ void KeyboardReader::run()
             std::string command, channel_name;
             iss >> command >> channel_name;
 
-            StompFrame frame("SUBSCRIBE");
-            frame.addHeader("accept-version", "1.2");
-            frame.addHeader("destination", channel_name);
+            int subscriptionId = KeyboardReader::generateSubscriptionId();
 
+            topicToSubscriptionId_[channel_name] = subscriptionId;
+
+            StompFrame frame("SUBSCRIBE");
+            frame.addHeader("destination", "/" + channel_name);
+            frame.addHeader("id", std::to_string(subscriptionId));
             std::string receiptId = connectionHandler_.generateReceiptId();
             frame.addHeader("receipt", receiptId);
 
@@ -116,13 +116,16 @@ void KeyboardReader::run()
             iss >> command >> channel_name;
 
             StompFrame frame("UNSUBSCRIBE");
-            frame.addHeader("accept-version", "1.2");
-            frame.addHeader("destination", channel_name);
 
             std::string receiptId = connectionHandler_.generateReceiptId();
+            int subscriptionId = KeyboardReader::topicToSubscriptionId_[channel_name];
+
+            frame.addHeader("id", std::to_string(subscriptionId));
             frame.addHeader("receipt", receiptId);
 
             std::string frameStr = frame.toString();
+            std::cout << "Sending frame:\n"
+                      << frameStr << std::endl;
             if (!connectionHandler_.sendFrameAscii(frameStr, '\0'))
             {
                 std::cout << "Disconnected. Exiting...\n"
@@ -150,21 +153,23 @@ void KeyboardReader::run()
             {
                 event.setEventOwnerUser(user_);
                 StompFrame eventFrame("SEND");
-                eventFrame.addHeader("accept-version", "1.2");
-                eventFrame.addHeader("destination", reportEvents.channel_name);
+                eventFrame.addHeader("destination", "/" + reportEvents.channel_name);
+                // std::string receiptId = connectionHandler_.generateReceiptId();
+
+                // eventFrame.addHeader("receipt", receiptId);
+
                 eventFrame.setBody(event.toString());
 
-                std::string receiptId = connectionHandler_.generateReceiptId();
-                eventFrame.addHeader("receipt", receiptId);
-
                 std::string eventFrameStr = eventFrame.toString();
-                if (!connectionHandler_.sendFrameAscii(eventFrameStr, '\0'))
-                {
-                    std::cout << "Disconnected. Exiting...\n"
-                              << std::endl;
-                    break;
-                }
-                addFrame(receiptId, eventFrame);
+                std::cout << "Sending frame:\n"
+                          << eventFrameStr << std::endl;
+                // if (!connectionHandler_.sendFrameAscii(eventFrameStr, '\0'))
+                // {
+                //     std::cout << "Disconnected. Exiting...\n"
+                //               << std::endl;
+                //     break;
+                // }
+                // addFrame(receiptId, eventFrame);
                 addMessageToChannel(reportEvents.channel_name, event.toString());
             }
         }
@@ -367,4 +372,8 @@ bool KeyboardReader::getStopThread()
 void KeyboardReader::setStopThread(bool stopThread)
 {
     stopThread_ = stopThread;
+}
+int KeyboardReader::generateSubscriptionId()
+{
+    return subscriptionIdCounter_++;
 }

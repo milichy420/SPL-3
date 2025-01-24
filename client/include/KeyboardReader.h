@@ -30,12 +30,15 @@ public:
     bool sendFrame(const StompFrame &frame);
     void setStopThread(bool stopThread);
     bool getStopThread();
+    int generateSubscriptionId();
 
 private:
     // ConnectionHandler &connectionHandler_;
     ConnectionHandler connectionHandler_;
     std::map<std::string, StompFrame> sentFrames_;
     std::map<std::string, std::vector<std::string>> channelMessages_;
+    std::map<std::string, int> topicToSubscriptionId_;
+    int subscriptionIdCounter_;
     bool loggedIn_;
     std::string user_;
     std::thread socketThread_;

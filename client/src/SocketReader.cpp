@@ -47,13 +47,10 @@ void SocketReader::run()
             else if (sentFrame.getCommand() == "SUBSCRIBE")
             {
                 std::cout << "Joind channel " << sentFrame.getHeader("destination") << std::endl;
-                break;
             }
             else if (sentFrame.getCommand() == "UNSUBSCRIBE")
             {
-                std::cout << "Exited channel " << sentFrame.getHeader("destination") << std::endl;
-                keyboardReader_.stopSocketThread();
-                break;
+                std::cout << "Exited channel " << sentFrame.getHeader("id") << std::endl;
             }
             else if (sentFrame.getCommand() == "SEND")
             {

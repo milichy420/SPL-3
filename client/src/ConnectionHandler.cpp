@@ -11,7 +11,7 @@ using std::endl;
 using std::string;
 
 ConnectionHandler::ConnectionHandler(string host, short port) : host_(host), port_(port), io_service_(),
-																socket_(io_service_) {}
+																socket_(io_service_), receiptCounter_(0) {}
 
 ConnectionHandler::~ConnectionHandler()
 {
@@ -145,7 +145,7 @@ void ConnectionHandler::close()
 
 std::string ConnectionHandler::generateReceiptId()
 {
-	return "receipt-" + std::to_string(receiptCounter_++);
+	return std::to_string(receiptCounter_++);
 }
 
 void ConnectionHandler::setHost(const std::string &host)
