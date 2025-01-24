@@ -12,11 +12,12 @@ void SocketReader::run()
     while (!stopThread_)
     {
         std::string answer;
-        // if (!keyboardReader_.getConnectionHandler().getFrameAscii(answer, '\0'))
-        // {
-        //     break;
-        // }
-        keyboardReader_.getConnectionHandler().getFrameAscii(answer, '\0');
+        if (!keyboardReader_.getConnectionHandler().getFrameAscii(answer, '\0'))
+        {
+            std::cout << "Disconnected. Exiting..." << std::endl;
+            break;
+        }
+        // keyboardReader_.getConnectionHandler().getFrameAscii(answer, '\0');
         std::cout
             << "Reply: " << answer << std::endl;
 

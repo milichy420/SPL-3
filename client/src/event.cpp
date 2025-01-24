@@ -148,7 +148,9 @@ std::string Event::toString() const
     eventString += "general information:\n";
     for (auto &info : general_information)
     {
-        eventString += "    " + info.first + ": " + info.second + "\n";
+        std::string formatted_key = info.first;
+        std::replace(formatted_key.begin(), formatted_key.end(), '_', ' ');
+        eventString += "    " + formatted_key + ": " + info.second + "\n";
     }
     eventString += "description:\n" + description + "\n";
     return eventString;

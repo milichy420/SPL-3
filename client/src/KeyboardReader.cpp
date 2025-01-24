@@ -87,7 +87,7 @@ void KeyboardReader::run()
             topicToSubscriptionId_[channel_name] = subscriptionId;
 
             StompFrame frame("SUBSCRIBE");
-            frame.addHeader("destination", "/" + channel_name);
+            frame.addHeader("destination", channel_name);
             frame.addHeader("id", std::to_string(subscriptionId));
             std::string receiptId = connectionHandler_.generateReceiptId();
             frame.addHeader("receipt", receiptId);
@@ -154,22 +154,22 @@ void KeyboardReader::run()
                 event.setEventOwnerUser(user_);
                 StompFrame eventFrame("SEND");
                 eventFrame.addHeader("destination", "/" + reportEvents.channel_name);
-                // std::string receiptId = connectionHandler_.generateReceiptId();
+                std::string receiptId = connectionHandler_.generateReceiptId();
 
-                // eventFrame.addHeader("receipt", receiptId);
+                eventFrame.addHeader("receipt", receiptId);
 
                 eventFrame.setBody(event.toString());
 
                 std::string eventFrameStr = eventFrame.toString();
                 std::cout << "Sending frame:\n"
                           << eventFrameStr << std::endl;
-                // if (!connectionHandler_.sendFrameAscii(eventFrameStr, '\0'))
-                // {
-                //     std::cout << "Disconnected. Exiting...\n"
-                //               << std::endl;
-                //     break;
-                // }
-                // addFrame(receiptId, eventFrame);
+                if (!connectionHandler_.sendFrameAscii(eventFrameStr, '\0'))
+                {
+                    std::cout << "Disconnected. Exiting...\n"
+                              << std::endl;
+                    break;
+                }
+                addFrame(receiptId, eventFrame);
                 addMessageToChannel(reportEvents.channel_name, event.toString());
             }
         }
