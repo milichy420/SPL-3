@@ -1,18 +1,34 @@
 #include "../include/KeyboardReader.h"
 #include "../include/StompFrame.h"
 #include "../include/event.h"
+#include "../include/SocketReader.h"
+#include "../include/ConnectionHandler.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <thread>
 
-KeyboardReader::KeyboardReader(ConnectionHandler &connectionHandler) : connectionHandler_(connectionHandler), sentFrames_(), channelMessages_(), loggedIn_(false), user_("") {}
+// KeyboardReader::KeyboardReader(ConnectionHandler &connectionHandler) : connectionHandler_(connectionHandler), sentFrames_(), channelMessages_(), loggedIn_(false), user_("") {}
+// KeyboardReader::KeyboardReader(ConnectionHandler connectionHandler) : connectionHandler_(connectionHandler), sentFrames_(), channelMessages_(), loggedIn_(false), user_("") {}
+KeyboardReader::KeyboardReader() : connectionHandler_("127.0.0.1", 7777), sentFrames_(), channelMessages_(), loggedIn_(false), user_(""), socketThread_(), stopThread_(false) {}
+
+KeyboardReader::~KeyboardReader()
+{
+    stopSocketThread();
+}
 
 void KeyboardReader::run()
 {
+    const std::string HOST = "stomp.cs.bgu.ac.il";
     while (true)
     {
         std::string line;
         std::getline(std::cin, line);
+
+        if (stopThread_)
+        {
+            stopSocketThread();
+        }
 
         // Example: handle "login <host:port> <username> <password>" command
         if (line.substr(0, 5) == "login")
@@ -21,21 +37,41 @@ void KeyboardReader::run()
             std::string command, hostPort, username, password;
             iss >> command >> hostPort >> username >> password;
 
+            std::string host = hostPort.substr(0, hostPort.find(':'));
+            short port = std::stoi(hostPort.substr(hostPort.find(':') + 1));
+
+            // ConnectionHandler connectionHandler_(host, port);
+            connectionHandler_.setHost(host);
+            connectionHandler_.setPort(port);
+            if (!connectionHandler_.connect())
+            {
+                std::cerr << "Cannot connect to " << host << ":" << port << std::endl;
+                continue;
+            }
+
             StompFrame frame("CONNECT");
             frame.addHeader("accept-version", "1.2");
-            frame.addHeader("host", hostPort);
+            frame.addHeader("host", HOST);
             frame.addHeader("login", username);
             frame.addHeader("passcode", password);
 
             user_ = username;
 
             std::string frameStr = frame.toString();
-            if (!connectionHandler_.sendLine(frameStr))
+            std::cout << "Sending frame: " << frameStr << std::endl;
+
+            if (!connectionHandler_.sendFrameAscii(frameStr, '\0'))
             {
                 std::cout << "Disconnected. Exiting...\n"
                           << std::endl;
                 break;
             }
+
+            // startSocketReader();
+            stopThread_ = false;
+            SocketReader socketReader(*this);
+            socketThread_ = std::thread(&SocketReader::run, socketReader);
+            // setLoggedIn(true);
         }
         else if (line.substr(0, 4) == "join")
         {
@@ -46,8 +82,8 @@ void KeyboardReader::run()
             }
 
             std::istringstream iss(line);
-            std::string channel_name;
-            iss >> channel_name;
+            std::string command, channel_name;
+            iss >> command >> channel_name;
 
             StompFrame frame("SUBSCRIBE");
             frame.addHeader("accept-version", "1.2");
@@ -57,7 +93,7 @@ void KeyboardReader::run()
             frame.addHeader("receipt", receiptId);
 
             std::string frameStr = frame.toString();
-            if (!connectionHandler_.sendLine(frameStr))
+            if (!connectionHandler_.sendFrameAscii(frameStr, '\0'))
             {
                 std::cout << "Disconnected. Exiting...\n"
                           << std::endl;
@@ -76,8 +112,8 @@ void KeyboardReader::run()
             }
 
             std::istringstream iss(line);
-            std::string channel_name;
-            iss >> channel_name;
+            std::string command, channel_name;
+            iss >> command >> channel_name;
 
             StompFrame frame("UNSUBSCRIBE");
             frame.addHeader("accept-version", "1.2");
@@ -87,7 +123,7 @@ void KeyboardReader::run()
             frame.addHeader("receipt", receiptId);
 
             std::string frameStr = frame.toString();
-            if (!connectionHandler_.sendLine(frameStr))
+            if (!connectionHandler_.sendFrameAscii(frameStr, '\0'))
             {
                 std::cout << "Disconnected. Exiting...\n"
                           << std::endl;
@@ -105,8 +141,8 @@ void KeyboardReader::run()
             }
 
             std::istringstream iss(line);
-            std::string file;
-            iss >> file;
+            std::string command, file;
+            iss >> command >> file;
 
             names_and_events reportEvents = parseEventsFile(file);
 
@@ -122,7 +158,7 @@ void KeyboardReader::run()
                 eventFrame.addHeader("receipt", receiptId);
 
                 std::string eventFrameStr = eventFrame.toString();
-                if (!connectionHandler_.sendLine(eventFrameStr))
+                if (!connectionHandler_.sendFrameAscii(eventFrameStr, '\0'))
                 {
                     std::cout << "Disconnected. Exiting...\n"
                               << std::endl;
@@ -141,8 +177,8 @@ void KeyboardReader::run()
             }
 
             std::istringstream iss(line);
-            std::string channel_name, user, file;
-            iss >> channel_name >> user >> file;
+            std::string command, channel_name, user, file;
+            iss >> command >> channel_name >> user >> file;
 
             auto it = channelMessages_.find(channel_name);
             if (it != channelMessages_.end())
@@ -250,7 +286,7 @@ void KeyboardReader::run()
             std::string reciept;
             iss >> reciept;
 
-            StompFrame frame("DICONNECT");
+            StompFrame frame("DISCONNECT");
             frame.addHeader("accept-version", "1.2");
             frame.addHeader("reciept", reciept);
 
@@ -258,7 +294,7 @@ void KeyboardReader::run()
             frame.addHeader("receipt", receiptId);
 
             std::string frameStr = frame.toString();
-            if (!connectionHandler_.sendLine(frameStr))
+            if (!connectionHandler_.sendFrameAscii(frameStr, '\0'))
             {
                 std::cout << "Disconnected. Exiting...\n"
                           << std::endl;
@@ -266,6 +302,11 @@ void KeyboardReader::run()
             }
 
             addFrame(receiptId, frame);
+            setLoggedIn(false);
+        }
+        else
+        {
+            std::cout << "Invalid command. Please try again." << std::endl;
         }
     }
 }
@@ -293,4 +334,37 @@ StompFrame KeyboardReader::getFrame(const std::string &receiptId) const
 void KeyboardReader::addMessageToChannel(const std::string &channel, const std::string &message)
 {
     channelMessages_[channel].push_back(message);
+}
+
+void KeyboardReader::startSocketReader()
+{
+    if (!socketThread_.joinable())
+    {
+        SocketReader socketReader(*this);
+        socketThread_ = std::thread(&SocketReader::run, socketReader);
+    }
+}
+
+void KeyboardReader::stopSocketThread()
+{
+    if (socketThread_.joinable())
+    {
+        stopThread_ = true;
+        socketThread_.join();
+    }
+}
+
+ConnectionHandler &KeyboardReader::getConnectionHandler()
+{
+    return connectionHandler_;
+}
+
+bool KeyboardReader::getStopThread()
+{
+    return stopThread_;
+}
+
+void KeyboardReader::setStopThread(bool stopThread)
+{
+    stopThread_ = stopThread;
 }

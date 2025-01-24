@@ -2,20 +2,23 @@
 #include "../include/StompFrame.h"
 #include <iostream>
 
-SocketReader::SocketReader(ConnectionHandler &connectionHandler, KeyboardReader &keyboardReader) : connectionHandler_(connectionHandler), keyboardReader_(keyboardReader) {}
+// SocketReader::SocketReader(ConnectionHandler &connectionHandler, KeyboardReader &keyboardReader) : connectionHandler_(connectionHandler), keyboardReader_(keyboardReader) {}
+SocketReader::SocketReader(KeyboardReader &keyboardReader) : keyboardReader_(keyboardReader) {}
 
 void SocketReader::run()
 {
-    while (true)
+    bool stopThread_ = false;
+    std::cout << "Starting socket reader..." << std::endl;
+    while (!stopThread_)
     {
         std::string answer;
-        if (!connectionHandler_.getLine(answer))
-        {
-            std::cout << "Disconnected. Exiting...\n"
-                      << std::endl;
-            break;
-        }
-        std::cout << "Reply: " << answer << std::endl;
+        // if (!keyboardReader_.getConnectionHandler().getFrameAscii(answer, '\0'))
+        // {
+        //     break;
+        // }
+        keyboardReader_.getConnectionHandler().getFrameAscii(answer, '\0');
+        std::cout
+            << "Reply: " << answer << std::endl;
 
         StompFrame frame = StompFrame::fromString(answer);
         if (frame.getCommand() == "CONNECTED")
@@ -25,6 +28,7 @@ void SocketReader::run()
         }
         else if (frame.getCommand() == "RECEIPT")
         {
+            std::cout << "Receipt received." << std::endl;
             std::string receiptId = frame.getHeader("receipt-id");
             std::cout << "Receipt received for frame: " << receiptId << std::endl;
             StompFrame sentFrame = keyboardReader_.getFrame(receiptId);
@@ -34,7 +38,10 @@ void SocketReader::run()
             {
                 std::cout << "Disconnecting..." << std::endl;
                 keyboardReader_.setLoggedIn(false);
-                connectionHandler_.close();
+                keyboardReader_.getConnectionHandler().close();
+                stopThread_ = true;
+                keyboardReader_.setStopThread(true);
+                std::cout << "stop thread status " << keyboardReader_.getStopThread() << std::endl;
                 break;
             }
             else if (sentFrame.getCommand() == "SUBSCRIBE")
@@ -45,6 +52,7 @@ void SocketReader::run()
             else if (sentFrame.getCommand() == "UNSUBSCRIBE")
             {
                 std::cout << "Exited channel " << sentFrame.getHeader("destination") << std::endl;
+                keyboardReader_.stopSocketThread();
                 break;
             }
             else if (sentFrame.getCommand() == "SEND")

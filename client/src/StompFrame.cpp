@@ -22,7 +22,7 @@ std::string StompFrame::toString() const
     {
         frame += header.first + ":" + header.second + "\n";
     }
-    frame += "\n" + body_ + "\0";
+    frame += "\n" + body_ + "\n\0";
     return frame;
 }
 

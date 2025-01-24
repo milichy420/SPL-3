@@ -4,14 +4,16 @@
 #include "ConnectionHandler.h"
 #include "KeyboardReader.h"
 
+class KeyboardReader;
+
 class SocketReader
 {
 public:
-    SocketReader(ConnectionHandler &connectionHandler, KeyboardReader &keyboardReader);
+    SocketReader(KeyboardReader &keyboardReader);
     void run();
+    void stop();
 
 private:
-    ConnectionHandler &connectionHandler_;
     KeyboardReader &keyboardReader_;
 };
 

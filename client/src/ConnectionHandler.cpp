@@ -1,4 +1,6 @@
 #include "../include/ConnectionHandler.h"
+#include <iostream>
+#include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
 
@@ -66,9 +68,16 @@ bool ConnectionHandler::sendBytes(const char bytes[], int bytesToWrite)
 		while (!error && bytesToWrite > tmp)
 		{
 			tmp += socket_.write_some(boost::asio::buffer(bytes + tmp, bytesToWrite - tmp), error);
+			if (!socket_.is_open())
+			{
+				std::cout << "socket is closed" << std::endl;
+				throw std::runtime_error("Socket is closed.");
+			}
 		}
 		if (error)
+		{
 			throw boost::system::system_error(error);
+		}
 	}
 	catch (std::exception &e)
 	{
@@ -137,4 +146,14 @@ void ConnectionHandler::close()
 std::string ConnectionHandler::generateReceiptId()
 {
 	return "receipt-" + std::to_string(receiptCounter_++);
+}
+
+void ConnectionHandler::setHost(const std::string &host)
+{
+	host_ = host;
+}
+
+void ConnectionHandler::setPort(short port)
+{
+	port_ = port;
 }
