@@ -13,24 +13,22 @@ public class StompProtocolEncDec  implements MessageEncoderDecoder<StompFrame> {
             return parseFrame();
         }
 
-        frameBuffer.append(nextByte);
+        frameBuffer.append((char)nextByte);
         return null;
     }
 
     public byte[] encode(StompFrame frame) {
         StringBuilder frameBytes = new StringBuilder();
-        frameBytes.append(frame.getName());
-        for(String key : frame.getHeaders().keySet()){
-            frameBytes.append(key + ":" + frame.getHeaders().get(key) + "\n");
-        }
-        frameBytes.append("\n");
-        frameBytes.append(frame.getBody());
+        frameBytes.append(frame.toString());
         frameBytes.append("\u0000");
+        System.out.println("ENCODED FRAME: ");
+        System.out.println(frameBytes.toString());
         return frameBytes.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     private StompFrame parseFrame() {
         String frameString = frameBuffer.toString();
+        frameString.chars();
         frameBuffer.setLength(0);
         return new StompFrame(frameString);
     }

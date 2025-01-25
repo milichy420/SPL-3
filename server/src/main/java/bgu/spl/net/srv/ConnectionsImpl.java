@@ -2,7 +2,10 @@ package bgu.spl.net.srv;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.atomic.*;
+
+import bgu.spl.net.impl.stomp.StompFrame;
 
 public class ConnectionsImpl <T> implements Connections <T> {
     private ConcurrentHashMap<Integer, ConnectionHandler<T>> connections; 
@@ -17,6 +20,44 @@ public class ConnectionsImpl <T> implements Connections <T> {
         active_logins = new ConcurrentHashMap<>();
         inactive_logins = new ConcurrentHashMap<>();
         currentMessageID = new AtomicInteger(0);
+    }
+
+    public void addConnection(int connectionId, ConnectionHandler<T> handler){
+        connections.put(connectionId, handler);
+    }
+
+    public String login(String username, String password, int connectionId){
+        // check if user is already logged in
+        if(active_logins.containsKey(username)){
+            return "already logged in";
+        }
+
+        // check if user is new
+        User user = inactive_logins.get(username);
+        if(user == null){
+            loginNewUser(username, password, connectionId);
+            return "connected";
+        }
+
+        // check if password is correct for existing user
+        if(user.getPassword().equals(password)){
+            loginExistingUser(username, connectionId);
+            return "connected";
+        }
+        return username;
+    }
+
+    public void loginNewUser(String username, String password, int connectionId){
+        User user = new User(username, password, connectionId);
+        active_logins.put(username, user);
+        connections.get(connectionId).setUser(user);
+    }
+
+    public void loginExistingUser(String username, int connectionId){
+        User user = inactive_logins.get(username);
+        active_logins.put(username, user);
+        inactive_logins.remove(username);
+        connections.get(connectionId).setUser(user);
     }
 
     @Override

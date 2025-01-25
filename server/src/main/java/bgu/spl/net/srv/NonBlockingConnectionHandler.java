@@ -31,14 +31,15 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
             MessageEncoderDecoder<T> reader,
             MessagingProtocol<T> protocol,
             SocketChannel chan,
-            Reactor reactor,
-            User user) {
+            Reactor reactor) {
         this.chan = chan;
         this.encdec = reader;
         this.protocol = protocol;
         this.reactor = reactor;
-        this.user = user;
+    }
 
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Runnable continueRead() {

@@ -18,13 +18,17 @@ public class StompFrame {
         this.name = lines[0];
         this.headers = new HashMap<>();
         int i = 1;
-        while (!lines[i].equals("")){
+        while (lines.length > i && !lines[i].equals("")){
             String[] header = lines[i].split(":");
             headers.put(header[0],header[1]);
             i++;
         }
-        this.body = lines[i+1];
-    }
+
+        this.body = "";
+        while (i < lines.length){
+            this.body += lines[i] + "\n";
+            i++;}
+        }
 
 
     public String getName() {
@@ -48,17 +52,5 @@ public class StompFrame {
         result += body;
         return result;
     }
-
-    public static void main(String[] args) {
-        String frameString = "CONNECT\n" +
-                "accept-version:1.2\n" +
-                "host:stomp.cs.bgu.ac.il\n" +
-                "login:meni\n" +
-                "passcode:films\n" +
-
-                "\n" +
-                "this is my body and shit idk what to put here";
-        StompFrame frame = new StompFrame(frameString);
-        System.out.println(frame);
-    }
 }
+

@@ -8,5 +8,7 @@ public interface Connections<T> {
 
     void send(String channel, T msg);
 
+    String login(String username, String password, int connectionId);
+
     void disconnect(int connectionId);
 }
