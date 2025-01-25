@@ -159,7 +159,21 @@ std::string Event::toString() const
 names_and_events parseEventsFile(std::string json_path)
 {
     std::ifstream f(json_path);
-    json data = json::parse(f);
+    json data;
+    try
+    {
+        data = json::parse(f);
+    }
+    catch (const std::ifstream::failure &e)
+    {
+        std::cerr << "Exception opening/reading file: " << e.what() << '\n';
+        return names_and_events{"", {}};
+    }
+    catch (const json::parse_error &e)
+    {
+        std::cerr << "Exception parsing JSON: " << e.what() << '\n';
+        return names_and_events{"", {}};
+    }
     std::string channel_name = data["channel_name"];
 
     // run over all the events and convert them to Event objects

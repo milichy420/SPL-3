@@ -148,7 +148,11 @@ void KeyboardReader::run()
             iss >> command >> file;
 
             names_and_events reportEvents = parseEventsFile(file);
-
+            if (reportEvents.channel_name.empty())
+            {
+                std::cout << "Error parsing file: " << file << std::endl;
+                continue;
+            }
             for (auto &event : reportEvents.events)
             {
                 event.setEventOwnerUser(user_);
