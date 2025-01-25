@@ -40,8 +40,6 @@ public class ConnectionsImpl <T> implements Connections <T> {
         }
         topics.get(topic).add(connectionId);
         active_logins.get(connections.get(connectionId).getUser().getUsername()).subscribeToTopic(topic, subscriptionId);
-        System.out.println("updated topics list: " + topics.toString());
-        System.out.println("updated user topics: " + active_logins.get(connections.get(connectionId).getUser().getUsername()).getSubscribedTopics().toString());
         return true;
     }
 
@@ -55,8 +53,6 @@ public class ConnectionsImpl <T> implements Connections <T> {
 
         topics.get(topic).remove(connectionId);
         user.removeSubscribedTopic(subscriptionId);
-        System.out.println("updated topics list: " + topics.toString());
-        System.out.println("updated user topics: " + active_logins.get(connections.get(connectionId).getUser().getUsername()).getSubscribedTopics().toString());
         return true;
     }
 

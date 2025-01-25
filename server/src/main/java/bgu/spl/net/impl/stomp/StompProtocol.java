@@ -29,10 +29,7 @@ public class StompProtocol implements StompMessagingProtocol<StompFrame>{
         if (msg.getHeaders().containsKey("receipt")) {
             FrameHandler.handleReceipt(msg, connections, connectionId);
         }
-        System.out.println("IM PRINTING THE MESSAGE");
-        System.out.println(msg.toString());
         StompFrame outputFrame = null;
-        System.out.println("the message name is: " + msg.getName());
         switch (msg.getName()) {
             case "CONNECT":
                 outputFrame = FrameHandler.handleConnect(msg, connections, connectionId);
