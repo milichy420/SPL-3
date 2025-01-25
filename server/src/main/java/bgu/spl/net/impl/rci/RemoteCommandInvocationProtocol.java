@@ -7,6 +7,11 @@ import java.io.Serializable;
 
 public class RemoteCommandInvocationProtocol<T> implements MessagingProtocol<Serializable> {
 
+    @Override
+    public Serializable addSubscriptionIdToMessage(Serializable msg, int subscriptionId) {
+        return null;
+    }
+
     private T arg;
 
     public RemoteCommandInvocationProtocol(T arg) {

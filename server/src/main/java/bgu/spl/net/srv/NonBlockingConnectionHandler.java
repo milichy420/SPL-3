@@ -13,6 +13,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
 
     @Override
+    public MessagingProtocol<T> getProtocol() {
+        return protocol;
+    }
+
+    @Override
     public User getUser() {
         return user;
     }

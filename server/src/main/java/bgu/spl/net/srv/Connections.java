@@ -10,5 +10,13 @@ public interface Connections<T> {
 
     String login(String username, String password, int connectionId);
 
+    boolean subscribeToTopic(String topic, int subscriptionId, int connectionId);
+
+    boolean unsubscribeFromTopic(int subscriptionId, int connectionId);
+
+    boolean isUserSubscribedToTopic(int connectionId, String topic);
+
+    int getAndIncrementMessageId();
+    
     void disconnect(int connectionId);
 }

@@ -26,6 +26,41 @@ public class ConnectionsImpl <T> implements Connections <T> {
         connections.put(connectionId, handler);
     }
 
+    public int getAndIncrementMessageId(){
+        return currentMessageID.getAndIncrement();
+    }
+    public boolean subscribeToTopic(String topic, int subscriptionId, int connectionId){
+        // check if user is already subscribed to topic and if so return false
+        if (active_logins.get(connections.get(connectionId).getUser().getUsername()).getSubscribedTopics().containsValue(topic)){
+            return false;
+        }
+
+        if(!topics.containsKey(topic)){
+            topics.put(topic, new ArrayList<>());
+        }
+        topics.get(topic).add(connectionId);
+        active_logins.get(connections.get(connectionId).getUser().getUsername()).subscribeToTopic(topic, subscriptionId);
+        System.out.println("updated topics list: " + topics.toString());
+        System.out.println("updated user topics: " + active_logins.get(connections.get(connectionId).getUser().getUsername()).getSubscribedTopics().toString());
+        return true;
+    }
+
+    public boolean unsubscribeFromTopic(int subscriptionId, int connectionId){
+        User user = connections.get(connectionId).getUser();
+        String topic = user.getSubscribedTopics().get(subscriptionId);
+        // check if user is subscribed to topic and if not return false
+        if (topic == null){
+            return false;
+        }
+
+        topics.get(topic).remove(connectionId);
+        user.removeSubscribedTopic(subscriptionId);
+        System.out.println("updated topics list: " + topics.toString());
+        System.out.println("updated user topics: " + active_logins.get(connections.get(connectionId).getUser().getUsername()).getSubscribedTopics().toString());
+        return true;
+    }
+
+
     public String login(String username, String password, int connectionId){
         // check if user is already logged in
         if(active_logins.containsKey(username)){
@@ -68,8 +103,12 @@ public class ConnectionsImpl <T> implements Connections <T> {
 
     @Override
     public void send(String channel, T msg) {
+        User user;
+        int subscriptionId;
         for (Integer connectionId : topics.get(channel)) {
-            send(connectionId, msg);
+            user = connections.get(connectionId).getUser();
+            subscriptionId = user.getSubscriptionIdForTopic(channel);
+            send(connectionId, connections.get(connectionId).getProtocol().addSubscriptionIdToMessage(msg, subscriptionId));
         }
     }
 
@@ -90,6 +129,11 @@ public class ConnectionsImpl <T> implements Connections <T> {
         user.unsuscribeFromAllTopics();
         active_logins.remove(user.getUsername());
         inactive_logins.put(user.getUsername(), user);
+    }
+
+    @Override
+    public boolean isUserSubscribedToTopic(int connectionId, String topic) {
+        return active_logins.get(connections.get(connectionId).getUser().getUsername()).getSubscribedTopics().containsValue(topic);
     }
 
 }

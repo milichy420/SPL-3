@@ -31,7 +31,7 @@ public class User {
         return subscribedTopics;
     }
 
-    public void addSubscribedTopic(String topic, int subscriptionId){
+    public void subscribeToTopic(String topic, int subscriptionId){
         subscribedTopics.put(subscriptionId, topic);
     }
 
@@ -49,6 +49,15 @@ public class User {
 
     public void unsuscribeFromAllTopics(){
         subscribedTopics.clear();
+    }
+
+    public int getSubscriptionIdForTopic(String topic){
+        for (int subscriptionId : subscribedTopics.keySet()){
+            if (subscribedTopics.get(subscriptionId).equals(topic)){
+                return subscriptionId;
+            }
+        }
+        return -1;
     }
 
 

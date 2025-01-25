@@ -3,6 +3,7 @@ package bgu.spl.net.impl.stomp;
 import java.util.HashMap;
 
 import bgu.spl.net.srv.ConnectionsImpl;
+import bgu.spl.net.srv.User;
 import bgu.spl.net.srv.Connections;
 
 public class FrameHandler {
@@ -52,19 +53,54 @@ public class FrameHandler {
         return new StompFrame(outputName, outputHeaders, outputBody);
     }
 
-    public static StompFrame handleSend(StompFrame frame) {
-        System.out.println(frame.toString());
-        return null;
+    public static StompFrame handleSend(StompFrame msg, Connections<StompFrame> connections, int connectionId) {
+        StompFrame resultFrame = null;
+        String topic = msg.getHeaders().get("destination").substring(1);
+        if(topic == null){
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("message", "Missing header");
+            StompFrame errorFrame = new StompFrame("ERROR", headers, "Missing destination header");
+            resultFrame = errorFrame;
+        }
+        else if(!connections.isUserSubscribedToTopic(connectionId, topic)){
+            System.out.println("User is not subscribed to topic " + topic);
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("message", "Topic subscription issue");
+            StompFrame errorFrame = new StompFrame("ERROR", headers, "User is not subscribed to topic");
+            resultFrame = errorFrame;
+        }
+        else{
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("destination", topic);
+            headers.put("message-id", String.valueOf(connections.getAndIncrementMessageId()));
+            connections.send(topic, new StompFrame("MESSAGE", msg.getHeaders(), msg.getBody()));
+        }
+
+        return resultFrame;
     }
 
-    public static StompFrame handleSubscribe(StompFrame frame) {
-        System.out.println(frame.toString());
-        return null;
+    public static StompFrame handleSubscribe(StompFrame msg, Connections<StompFrame> connections, int connectionId) {
+        StompFrame resultFrame = null;
+        if(!connections.subscribeToTopic(msg.getHeaders().get("destination"),Integer.valueOf(msg.getHeaders().get("id")), connectionId)){
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("message", "Topic subscription issue");
+            StompFrame errorFrame = new StompFrame("ERROR", headers, "User already subscribed to topic");
+            resultFrame = errorFrame;
+            connections.disconnect(connectionId);
+        }
+        return resultFrame;
     }
 
-    public static StompFrame handleUnsubscribe(StompFrame frame) {
-        System.out.println(frame.toString());
-        return null;
+    public static StompFrame handleUnsubscribe(StompFrame msg, Connections<StompFrame> connections, int connectionId) {
+        StompFrame resultFrame = null;
+        if(!connections.unsubscribeFromTopic(Integer.valueOf(msg.getHeaders().get("id")), connectionId)){
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("message", "Topic subscription issue");
+            StompFrame errorFrame = new StompFrame("ERROR", headers, "User is not subscribed to topic");
+            resultFrame = errorFrame;
+            connections.disconnect(connectionId);
+        }
+        return resultFrame;
     }
 
     public static void handleDisconnect(StompFrame msg, Connections<StompFrame> connections, int connectionId) {

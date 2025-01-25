@@ -17,6 +17,12 @@ public class StompProtocol implements StompMessagingProtocol<StompFrame>{
         this.connections = connections;
     }
 
+    public StompFrame addSubscriptionIdToMessage(StompFrame msg, int subscriptionId){
+        HashMap<String, String> headers = msg.getHeaders();
+        headers.put("subscription", String.valueOf(subscriptionId));
+        return new StompFrame(msg.getName(), headers, msg.getBody());
+    }
+
     @Override
     public StompFrame process(StompFrame msg) {
         StompFrame receiptFrame;
@@ -30,17 +36,13 @@ public class StompProtocol implements StompMessagingProtocol<StompFrame>{
         switch (msg.getName()) {
             case "CONNECT":
                 outputFrame = FrameHandler.handleConnect(msg, connections, connectionId);
-                System.out.println("output frame is: " + outputFrame.toString());
                 break;
             case "SEND":
-                
-                break;
+                return FrameHandler.handleSend(msg, connections, connectionId);
             case "SUBSCRIBE":
-                
-                break;
+                return FrameHandler.handleSubscribe(msg, connections, connectionId);
             case "UNSUBSCRIBE":
-                
-                break;
+                return FrameHandler.handleUnsubscribe(msg, connections, connectionId);
             case "DISCONNECT":    
                 FrameHandler.handleDisconnect(msg, connections, connectionId);
                 shouldTerminate = true;
