@@ -35,4 +35,10 @@ public class EchoProtocol implements MessagingProtocol<String> {
     public boolean shouldTerminate() {
         return shouldTerminate;
     }
+
+    @Override
+    public void start(int connectionId, Connections<String> connections) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'start'");
+    }
 }

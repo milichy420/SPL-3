@@ -8,6 +8,17 @@
 #include <sstream>
 #include <cstring>
 
+// Function to split a string by a delimiter
+void split_str(const std::string &s, char delimiter, std::vector<std::string> &tokens)
+{
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+}
+
 #include "../include/keyboardInput.h"
 
 using namespace std;
@@ -24,11 +35,13 @@ Event::~Event()
 {
 }
 
-void Event::setEventOwnerUser(std::string setEventOwnerUser) {
+void Event::setEventOwnerUser(std::string setEventOwnerUser)
+{
     eventOwnerUser = setEventOwnerUser;
 }
 
-const std::string &Event::getEventOwnerUser() const {
+const std::string &Event::getEventOwnerUser() const
+{
     return eventOwnerUser;
 }
 
@@ -62,51 +75,63 @@ const std::string &Event::get_description() const
     return this->description;
 }
 
-Event::Event(const std::string &frame_body): channel_name(""), city(""), 
-                                             name(""), date_time(0), description(""), general_information(),
-                                             eventOwnerUser("")
+Event::Event(const std::string &frame_body) : channel_name(""), city(""),
+                                              name(""), date_time(0), description(""), general_information(),
+                                              eventOwnerUser("")
 {
     stringstream ss(frame_body);
     string line;
     string eventDescription;
     map<string, string> general_information_from_string;
     bool inGeneralInformation = false;
-    while(getline(ss,line,'\n')){
+    while (getline(ss, line, '\n'))
+    {
         vector<string> lineArgs;
-        if(line.find(':') != string::npos) {
+        if (line.find(':') != string::npos)
+        {
             split_str(line, ':', lineArgs);
             string key = lineArgs.at(0);
             string val;
-            if(lineArgs.size() == 2) {
+            if (lineArgs.size() == 2)
+            {
                 val = lineArgs.at(1);
             }
-            if(key == "user") {
+            if (key == "user")
+            {
                 eventOwnerUser = val;
             }
-            if(key == "channel name") {
+            if (key == "channel name")
+            {
                 channel_name = val;
             }
-            if(key == "city") {
+            if (key == "city")
+            {
                 city = val;
             }
-            else if(key == "event name") {
+            else if (key == "event name")
+            {
                 name = val;
             }
-            else if(key == "date time") {
+            else if (key == "date time")
+            {
                 date_time = std::stoi(val);
             }
-            else if(key == "general information") {
+            else if (key == "general information")
+            {
                 inGeneralInformation = true;
                 continue;
             }
-            else if(key == "description") {
-                while(getline(ss,line,'\n')) {
+            else if (key == "description")
+            {
+                while (getline(ss, line, '\n'))
+                {
                     eventDescription += line + "\n";
                 }
                 description = eventDescription;
             }
 
-            if(inGeneralInformation) {
+            if (inGeneralInformation)
+            {
                 general_information_from_string[key.substr(1)] = val;
             }
         }
@@ -114,11 +139,41 @@ Event::Event(const std::string &frame_body): channel_name(""), city(""),
     general_information = general_information_from_string;
 }
 
+std::string Event::toString() const
+{
+    std::string eventString = "user: " + getEventOwnerUser() + "\n";
+    eventString += "city: " + get_city() + "\n";
+    eventString += "event name: " + get_name() + "\n";
+    eventString += "date time: " + std::to_string(date_time) + "\n";
+    eventString += "general information:\n";
+    for (auto &info : general_information)
+    {
+        std::string formatted_key = info.first;
+        std::replace(formatted_key.begin(), formatted_key.end(), '_', ' ');
+        eventString += "    " + formatted_key + ": " + info.second + "\n";
+    }
+    eventString += "description:\n" + description + "\n";
+    return eventString;
+}
+
 names_and_events parseEventsFile(std::string json_path)
 {
     std::ifstream f(json_path);
-    json data = json::parse(f);
-
+    json data;
+    try
+    {
+        data = json::parse(f);
+    }
+    catch (const std::ifstream::failure &e)
+    {
+        std::cerr << "Exception opening/reading file: " << e.what() << '\n';
+        return names_and_events{"", {}};
+    }
+    catch (const json::parse_error &e)
+    {
+        std::cerr << "Exception parsing JSON: " << e.what() << '\n';
+        return names_and_events{"", {}};
+    }
     std::string channel_name = data["channel_name"];
 
     // run over all the events and convert them to Event objects

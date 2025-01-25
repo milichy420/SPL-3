@@ -6,12 +6,14 @@
 
 using boost::asio::ip::tcp;
 
-class ConnectionHandler {
+class ConnectionHandler
+{
 private:
-	const std::string host_;
-	const short port_;
-	boost::asio::io_service io_service_;   // Provides core I/O functionality
+	std::string host_;
+	short port_;
+	boost::asio::io_service io_service_; // Provides core I/O functionality
 	tcp::socket socket_;
+	std::atomic<int> receiptCounter_;
 
 public:
 	ConnectionHandler(std::string host, short port);
@@ -48,4 +50,12 @@ public:
 	// Close down the connection properly.
 	void close();
 
-}; //class ConnectionHandler
+	std::string generateReceiptId();
+
+	// Set the host
+	void setHost(const std::string &host);
+
+	// Set the port
+	void setPort(short port);
+
+}; // class ConnectionHandler
