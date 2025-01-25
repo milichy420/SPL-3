@@ -33,7 +33,6 @@ public class FrameHandler {
         } else {
             String loginReply = connections.login(inputHeaders.get("login"), inputHeaders.get("passcode"),
                     connectionId);
-                System.out.println("loginReply: " + loginReply);
             if (loginReply == "already logged in") {
                 HashMap<String, String> headers = new HashMap<>();
                 headers.put("message", String.valueOf("Login failed"));
@@ -63,7 +62,6 @@ public class FrameHandler {
             resultFrame = errorFrame;
         }
         else if(!connections.isUserSubscribedToTopic(connectionId, topic)){
-            System.out.println("User is not subscribed to topic " + topic);
             HashMap<String, String> headers = new HashMap<>();
             headers.put("message", "Topic subscription issue");
             StompFrame errorFrame = new StompFrame("ERROR", headers, "User is not subscribed to topic");

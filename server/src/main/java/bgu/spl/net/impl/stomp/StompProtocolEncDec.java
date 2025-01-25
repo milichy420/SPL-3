@@ -21,8 +21,6 @@ public class StompProtocolEncDec  implements MessageEncoderDecoder<StompFrame> {
         StringBuilder frameBytes = new StringBuilder();
         frameBytes.append(frame.toString());
         frameBytes.append("\u0000");
-        System.out.println("ENCODED FRAME: ");
-        System.out.println(frameBytes.toString());
         return frameBytes.toString().getBytes(StandardCharsets.UTF_8);
     }
 
