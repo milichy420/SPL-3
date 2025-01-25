@@ -19,6 +19,10 @@ public class StompProtocol implements StompMessagingProtocol<StompFrame>{
 
     @Override
     public StompFrame process(StompFrame msg) {
+        StompFrame receiptFrame;
+        if (msg.getHeaders().containsKey("receipt")) {
+            FrameHandler.handleReceipt(msg, connections, connectionId);
+        }
         System.out.println("IM PRINTING THE MESSAGE");
         System.out.println(msg.toString());
         StompFrame outputFrame = null;
@@ -27,6 +31,7 @@ public class StompProtocol implements StompMessagingProtocol<StompFrame>{
             case "CONNECT":
                 outputFrame = FrameHandler.handleConnect(msg, connections, connectionId);
                 System.out.println("output frame is: " + outputFrame.toString());
+                break;
             case "SEND":
                 
                 break;
@@ -37,8 +42,9 @@ public class StompProtocol implements StompMessagingProtocol<StompFrame>{
                 
                 break;
             case "DISCONNECT":    
+                FrameHandler.handleDisconnect(msg, connections, connectionId);
                 shouldTerminate = true;
-                break;
+                return null;
         }
         if(outputFrame != null){
             if(outputFrame.getName().equals("ERROR")){

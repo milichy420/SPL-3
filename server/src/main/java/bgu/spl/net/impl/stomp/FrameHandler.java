@@ -67,14 +67,16 @@ public class FrameHandler {
         return null;
     }
 
-    public static StompFrame handleDisconnect(StompFrame frame) {
-        System.out.println(frame.toString());
-        return null;
+    public static void handleDisconnect(StompFrame msg, Connections<StompFrame> connections, int connectionId) {
+        connections.disconnect(connectionId);
     }
 
-    public static StompFrame handleReceipt(StompFrame frame) {
-        System.out.println(frame.toString());
-        return null;
+    public static void handleReceipt(StompFrame frame, Connections<StompFrame> connections, int connectionId) {
+        String receiptId = frame.getHeaders().get("receipt");
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("receipt-id", receiptId); 
+        StompFrame receiptFrame = new StompFrame("RECEIPT", headers, "");
+        connections.send(connectionId, receiptFrame);
     }
 
 }

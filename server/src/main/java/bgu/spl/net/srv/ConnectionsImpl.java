@@ -82,7 +82,7 @@ public class ConnectionsImpl <T> implements Connections <T> {
         // remove user from all topics
         for(int subscriptionId : Collections.list(subscribedTopics.keys())){
             String topic = subscribedTopics.get(subscriptionId);
-            topics.get(topic).remove(subscriptionId);
+            topics.get(topic).remove(connectionId);
         }
 
         // remove user from active logins, connections and unsubscribe from all topics
