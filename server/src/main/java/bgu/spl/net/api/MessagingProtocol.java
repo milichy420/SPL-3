@@ -1,4 +1,5 @@
 package bgu.spl.net.api;
+import bgu.spl.net.srv.Connections;
 
 import bgu.spl.net.srv.Connections;
 
@@ -18,5 +19,5 @@ public interface MessagingProtocol<T> {
      * @return true if the connection should be terminated
      */
     boolean shouldTerminate();
-
+    T addSubscriptionIdToMessage(T msg, int subscriptionId);
 }

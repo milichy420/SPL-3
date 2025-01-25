@@ -7,7 +7,17 @@ import java.time.LocalDateTime;
 
 public class EchoProtocol implements MessagingProtocol<String> {
 
+    @Override
+    public String addSubscriptionIdToMessage(String msg, int subscriptionId) {
+        return null;
+    }
+
     private boolean shouldTerminate = false;
+
+    @Override
+    public void start(int connectionId, Connections<String> connections){
+
+    };
 
     @Override
     public String process(String msg) {
