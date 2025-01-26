@@ -153,6 +153,11 @@ void KeyboardReader::run()
                 std::cout << "Error parsing file: " << file << std::endl;
                 continue;
             }
+            if (topicToSubscriptionId_.find(reportEvents.channel_name) == topicToSubscriptionId_.end())
+            {
+                std::cout << "Join the channel " << reportEvents.channel_name << " before reporting." << std::endl;
+                continue;
+            }
             for (auto &event : reportEvents.events)
             {
                 event.setEventOwnerUser(user_);
@@ -165,8 +170,6 @@ void KeyboardReader::run()
                 eventFrame.setBody(event.toString());
 
                 std::string eventFrameStr = eventFrame.toString();
-                std::cout << "Sending frame:\n"
-                          << eventFrameStr << std::endl;
                 if (!connectionHandler_.sendFrameAscii(eventFrameStr, '\0'))
                 {
                     std::cout << "Disconnected. Exiting...\n"
@@ -174,7 +177,7 @@ void KeyboardReader::run()
                     break;
                 }
                 addFrame(receiptId, eventFrame);
-                addMessageToChannel(reportEvents.channel_name, event.toString());
+                // addMessageToChannel(reportEvents.channel_name, event.toString());
             }
         }
         else if (line.substr(0, 7) == "summary")
