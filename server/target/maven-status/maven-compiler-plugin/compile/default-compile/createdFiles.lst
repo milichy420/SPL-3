@@ -1,10 +1,16 @@
 bgu/spl/net/impl/rci/Command.class
+bgu/spl/net/impl/stomp/StompProtocol.class
 bgu/spl/net/srv/ConnectionHandler.class
 bgu/spl/net/impl/newsfeed/NewsFeed.class
+bgu/spl/net/impl/stomp/FrameHandler.class
+bgu/spl/net/impl/stomp/StompProtocolEncDec.class
 bgu/spl/net/impl/echo/EchoClient.class
 bgu/spl/net/api/MessageEncoderDecoder.class
 bgu/spl/net/impl/newsfeed/PublishNewsCommand.class
 bgu/spl/net/srv/Connections.class
+bgu/spl/net/srv/ConnectionsImpl.class
+bgu/spl/net/srv/User.class
+bgu/spl/net/impl/stomp/StompFrame.class
 bgu/spl/net/srv/ActorThreadPool.class
 bgu/spl/net/impl/rci/ObjectEncoderDecoder.class
 bgu/spl/net/impl/newsfeed/FetchNewsCommand.class

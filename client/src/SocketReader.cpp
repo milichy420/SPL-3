@@ -8,7 +8,6 @@ SocketReader::SocketReader(KeyboardReader &keyboardReader) : keyboardReader_(key
 void SocketReader::run()
 {
     bool stopThread_ = false;
-    std::cout << "Starting socket reader..." << std::endl;
     while (!stopThread_)
     {
         std::string answer;
@@ -17,9 +16,6 @@ void SocketReader::run()
             std::cout << "Disconnected. Exiting..." << std::endl;
             break;
         }
-        // keyboardReader_.getConnectionHandler().getFrameAscii(answer, '\0');
-        std::cout
-            << "Reply: " << answer << std::endl;
 
         StompFrame frame = StompFrame::fromString(answer);
         if (frame.getCommand() == "CONNECTED")
@@ -29,11 +25,8 @@ void SocketReader::run()
         }
         else if (frame.getCommand() == "RECEIPT")
         {
-            std::cout << "Receipt received." << std::endl;
             std::string receiptId = frame.getHeader("receipt-id");
-            std::cout << "Receipt received for frame: " << receiptId << std::endl;
             StompFrame sentFrame = keyboardReader_.getFrame(receiptId);
-            std::cout << "Associated frame: " << sentFrame.toString() << std::endl;
 
             if (sentFrame.getCommand() == "DISCONNECT")
             {
@@ -42,12 +35,11 @@ void SocketReader::run()
                 keyboardReader_.getConnectionHandler().close();
                 stopThread_ = true;
                 keyboardReader_.setStopThread(true);
-                std::cout << "stop thread status " << keyboardReader_.getStopThread() << std::endl;
                 break;
             }
             else if (sentFrame.getCommand() == "SUBSCRIBE")
             {
-                std::cout << "Joind channel " << sentFrame.getHeader("destination") << std::endl;
+                std::cout << "Joined channel " << sentFrame.getHeader("destination") << std::endl;
             }
             else if (sentFrame.getCommand() == "UNSUBSCRIBE")
             {
@@ -66,13 +58,18 @@ void SocketReader::run()
                       << std::endl;
             std::cout << "Destination: " << destination << "\n"
                       << std::endl;
-            std::cout << "Received message: " << message << std::endl;
+            std::cout << message << std::endl;
 
             keyboardReader_.addMessageToChannel(destination.substr(1), message);
         }
         else if (frame.getCommand() == "ERROR")
         {
             std::cout << "Error: " << frame.getBody() << std::endl;
+
+            keyboardReader_.setLoggedIn(false);
+            keyboardReader_.getConnectionHandler().close();
+            stopThread_ = true;
+            keyboardReader_.setStopThread(true);
         }
         else
         {
