@@ -247,7 +247,8 @@ void KeyboardReader::run()
                 std::ofstream outFile(file);
                 if (outFile.is_open())
                 {
-                    outFile << "Channel " << channel_name << ", Total: " << totalReports << ", active: " << activeReports << ", forces arrival at scene: " << forcesArival << std::endl;
+                    outFile << "Channel " << channel_name << "\nStats:" << "\nTotal: " << totalReports << "\nactive: " << activeReports << "\nforces arrival at scene: " << forcesArival << "\n\nEvent Reports:\n\n"
+                            << std::endl;
                     for (auto &message : userMessages)
                     {
                         // Convert date_time from number to string
@@ -263,7 +264,7 @@ void KeyboardReader::run()
                         }
 
                         // Convert description to summary
-                        std::size_t descriptionPos = message.find("description: ");
+                        std::size_t descriptionPos = message.find("description:\n");
                         if (descriptionPos != std::string::npos)
                         {
                             std::string description = message.substr(descriptionPos + 13);
@@ -272,11 +273,42 @@ void KeyboardReader::run()
                             {
                                 summary += "...";
                             }
-                            message.replace(descriptionPos, 12, "summary: ");
-                            message.replace(descriptionPos + 9, description.length(), summary);
+                            message.replace(descriptionPos + 13, description.length(), summary);
                         }
 
-                        outFile << message << std::endl;
+                        std::string dateTime, eventName, city, description;
+                        std::istringstream iss(message);
+                        std::string line;
+
+                        while (std::getline(iss, line))
+                        {
+                            if (line.find("date time: ") != std::string::npos)
+                            {
+                                dateTime = line.substr(line.find("date time: ") + 11);
+                            }
+                            else if (line.find("event name: ") != std::string::npos)
+                            {
+                                eventName = line.substr(line.find("event name: ") + 12);
+                            }
+                            else if (line.find("city: ") != std::string::npos)
+                            {
+                                city = line.substr(line.find("city: ") + 6);
+                            }
+                            else if (line.find("description:") != std::string::npos)
+                            {
+                                if (std::getline(iss, line)) // Read the next line for the description
+                                {
+                                    description = line;
+                                }
+                            }
+                        }
+
+                        outFile << "Report_" << std::distance(userMessages.begin(), std::find(userMessages.begin(), userMessages.end(), message)) + 1 << ":\n";
+                        outFile << "city: " << city << "\n";
+                        outFile << "date time: " << dateTime << "\n";
+                        outFile << "event name: " << eventName << "\n";
+                        outFile << "summary: " << description << "\n\n";
+                        // outFile << message << std::endl;
                     }
                     outFile.close();
                 }
